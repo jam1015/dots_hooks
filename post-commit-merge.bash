@@ -9,38 +9,34 @@ frame_echo() {
 	echo "$line"
 }
 
-# Define git command for convenience
-git_cmd="git"
 
 DOTFILES_DIR=$HOME/dotfiles
 HOOKS_DIR=$HOME/dots_hooks
+GIT_CMD="git -C $DOTFILES_DIR"
 
-cd $DOTFILES_DIR
 
-rm "$DOTFILES_DIR/hooks/post-commit"
-rm "$DOTFILES_DIR/hooks/post-merge"
+[ -f "$DOTFILES_DIR/hooks/post-commit" ] && rm "$DOTFILES_DIR/hooks/post-commit"
+[ -f "$DOTFILES_DIR/hooks/post-merge" ] && rm "$DOTFILES_DIR/hooks/post-merge"
 
 set -e
 # Source configuration
 source "$HOOKS_DIR/config.bash"
 
 if [[ -n "$RUN" ]]; then
-	if [[ -n "$DOTSPUSH" || -n "$DOTSPULL" ]]; then
-		eval "$(ssh-agent -s)"
-	fi
 
 	original_display=$DISPLAY
 
 	# Add your SSH key and set a timeout (in seconds)
 	unset DISPLAY
 	if [[ -n "$DOTSPUSH" || -n "$DOTSPULL" ]]; then
-		ssh-add -t 3600 ~/.ssh/id_ed25519
 		eval "$(ssh-agent -s)"
+		ssh-add -t 3600 ~/.ssh/id_ed25519
+                trap "kill $SSH_AGENT_PID" EXIT
 	fi
 
 	# Function to check if a branch exists locally
 	branch_exists() {
-		if $git_cmd show-ref --verify --quiet "refs/heads/$1"; then
+		if $GIT_CMD show-ref --verify --quiet "refs/heads/$1"; then
 			return 0 # branch exists
 		else
 			return 1 # branch does not exist
@@ -76,7 +72,7 @@ if [[ -n "$RUN" ]]; then
 		fi
 
 		if [[ -n "$DOTSTRYREBASE" ]]; then
-			if ! $git_cmd rebase $reapply_cherry_picks $rebase_strategy "${source_branch}"; then
+      if ! $GIT_CMD rebase "$reapply_cherry_picks" "$rebase_strategy" "${source_branch}"; then
 				frame_echo "Rebase from ${source_branch} to ${target_branch} failed. Handle conflicts manually."
 				# Removed git rebase --abort to allow manual conflict resolution
 			else
@@ -85,7 +81,7 @@ if [[ -n "$RUN" ]]; then
 			fi
 		else
 			frame_echo "DOTSTRYREBASE is not set. Proceeding with merge."
-			if ! $git_cmd merge "${source_branch}"; then
+			if ! $GIT_CMD merge "${source_branch}"; then
 				frame_echo "Merge from ${source_branch} to ${target_branch} failed. Handle merge conflicts if any."
 			else
 				frame_echo "Merge successful."
@@ -93,7 +89,7 @@ if [[ -n "$RUN" ]]; then
 		fi
 
 		if [[ -n "$rebased" && -n "$DOTSPULL" ]]; then
-			if ! $git_cmd pull origin "${target_branch}"; then
+			if ! $GIT_CMD pull origin "${target_branch}"; then
 				frame_echo "Pull from origin ${target_branch} failed. Resolve any issues and retry."
 			else
 				frame_echo "Second pull of ${target_branch} after rebase successful."
@@ -115,14 +111,14 @@ if [[ -n "$RUN" ]]; then
 		frame_echo "Starting post commit/merge logic: Source: ${source_branch} | Target: ${target_branch}"
 
 		# Switch to the target branch only if it's not the current branch
-		if [[ "$($git_cmd rev-parse --abbrev-ref HEAD)" != "${target_branch}" ]]; then
+    if [[ "$($GIT_CMD rev-parse --abbrev-ref HEAD)" != "${target_branch}" ]]; then
 			frame_echo "Checking out target: ${target_branch}"
-			$git_cmd checkout "${target_branch}"
+			$GIT_CMD checkout "${target_branch}"
 		fi
 
 		if [[ -n "$DOTSPULL" ]]; then
 			# Pull the latest changes from the origin of the target branch
-			if ! $git_cmd pull origin "${target_branch}"; then
+			if ! $GIT_CMD pull origin "${target_branch}"; then
 				frame_echo "Pull from origin ${target_branch} failed. Resolve any issues and retry."
 				return 1
 			fi
@@ -139,15 +135,15 @@ if [[ -n "$RUN" ]]; then
 
 		if [[ -n "$DOTSPUSH" ]]; then
 			frame_echo "Pushing to origin."
-			$git_cmd push origin "${target_branch}"
+			$GIT_CMD push origin "${target_branch}"
 		else
 			frame_echo "DOTSPUSH is not set. Skipping push."
 		fi
 
 		# Skip checkout if source and target branches are the same
-		if [[ "$($git_cmd rev-parse --abbrev-ref HEAD)" != "${source_branch}" ]]; then
+    if [[ "$($GIT_CMD rev-parse --abbrev-ref HEAD)" != "${target_branch}" ]]; then
 			frame_echo "Checking ${source_branch} back out."
-			$git_cmd checkout "${source_branch}"
+			$GIT_CMD checkout "${source_branch}"
 		fi
 
 		frame_echo "Completed post commit/merge logic: Source: ${source_branch} | Target: ${target_branch}"
@@ -168,8 +164,7 @@ if [[ -n "$RUN" ]]; then
 		branch_map["mbp"]=""
 
 		# Start with the current branch
-		local current_branch
-		current_branch=$($git_cmd rev-parse --abbrev-ref HEAD)
+    local current_branch=$($GIT_CMD rev-parse --abbrev-ref HEAD)
 		local original_branch=$current_branch
 		local branches_to_process=($current_branch)
 		local next_level_branches=()
@@ -188,7 +183,7 @@ if [[ -n "$RUN" ]]; then
 			next_level_branches=()
 		done
 
-		$git_cmd checkout "$original_branch"
+		$GIT_CMD checkout "$original_branch"
 	}
 
 	merge_switch
@@ -196,7 +191,7 @@ if [[ -n "$RUN" ]]; then
 	export DISPLAY=$original_display
 
 	if [[ -n "$STOW" ]]; then
-		cd "$(git rev-parse --show-toplevel)"
+		cd "$($GIT_CMD rev-parse --show-toplevel)"
 		# Run stow for all directories within the dotfiles repo
 		stow --target="$HOME" *
 		# Change back to the original directory
@@ -205,9 +200,9 @@ if [[ -n "$RUN" ]]; then
 
 	ln -sf "$HOOKS_DIR/post_commit.bash" "$DOTFILES_DIR/hooks/post-commit"
 	ln -sf "$HOOKS_DIR/post_merge.bash" "$DOTFILES_DIR/hooks/post-merge"
+        chmod +x "$DOTFILES_DIR/hooks/post-commit"
+        chmod +x "$DOTILES_DIR/hooks/post-merge"
 
 else
 	frame_echo "Hooks are disabled."
 fi
-
-cd "$original_dir"

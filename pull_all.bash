@@ -4,15 +4,17 @@ original_dir=$(pwd)
 
 DOTFILES_DIR=$HOME/dotfiles
 cd $DOTFILES_DIR
+GIT_CMD="git -C $DOTFILES_DIR"
 
 set -e  # Exit on any command failure
 
 # Initialize SSH Agent
 eval "$(ssh-agent -s)"  # Start the SSH agent
 ssh-add ~/.ssh/id_ed25519  # Add your SSH key; replace id_ed25519 with your key file
+trap "kill $SSH_AGENT_PID" EXIT
 
 # Save the current branch name
-current_branch=$(git rev-parse --abbrev-ref HEAD)
+current_branch=$($GIT_CMD rev-parse --abbrev-ref HEAD)
 
 # Function to pull from origin
 pull_branch() {
@@ -21,12 +23,12 @@ pull_branch() {
 
   echo "Pulling updates for branch: $branch"
   # Check if the branch is already local
-  if git rev-parse --verify --quiet "$branch"; then
-    git checkout "$branch"
+  if $GIT_CMD rev-parse --verify --quiet "$branch"; then
+    $GIT_CMD checkout "$branch"
   else
-    git checkout -b "$branch" "$remote_branch"
+    $GIT_CMD checkout -b "$branch" "$remote_branch"
   fi
-  if git pull origin "$branch"; then
+  if $GIT_CMD pull origin "$branch"; then
     echo "Updates pulled successfully for branch: $branch"
   else
     echo "Conflict detected in branch: $branch. Please resolve manually."
@@ -35,8 +37,8 @@ pull_branch() {
 }
 
 # Fetch all remote branches and iterate over them
-git fetch --all
-git branch -r | grep -v '\->' | while read -r remote_branch; do
+$GIT_CMD fetch --all
+$GIT_CMD branch -r | grep -v '\->' | while read -r remote_branch; do
   if ! pull_branch "$remote_branch"; then
     echo "Stopping the script due to a conflict."
     exit 1  # Exit the script entirely if a conflict occurs
@@ -44,7 +46,7 @@ git branch -r | grep -v '\->' | while read -r remote_branch; do
 done
 
 # Checkout the original branch
-git checkout "$current_branch"
+$GIT_CMD checkout "$current_branch"
 echo "Returned to the original branch: $current_branch"
 
 # Kill the SSH agent
