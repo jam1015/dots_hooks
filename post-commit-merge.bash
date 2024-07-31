@@ -12,17 +12,17 @@ frame_echo() {
 # Define git command for convenience
 git_cmd="git"
 
-# Get the top-level directory of the repository
-GIT_DIR=$($git_cmd rev-parse --show-toplevel)
-PARRALEL_DIR="../dotfiles"
-PARRALEL_DIR=$GIT_DIR/$PARRALEL_DIR
+DOTFILES_DIR=$HOME/dotfiles
+HOOKS_DIR=$HOME/dots_hooks
 
-rm "$GIT_DIR/hooks/post-commit"
-rm "$GIT_DIR/hooks/post-merge"
+cd $DOTFILES_DIR
+
+rm "$DOTFILES_DIR/hooks/post-commit"
+rm "$DOTFILES_DIR/hooks/post-merge"
 
 set -e
 # Source configuration
-source "$PARRALEL_DIR/config.bash"
+source "$HOOKS_DIR/config.bash"
 
 if [[ -n "$RUN" ]]; then
 	if [[ -n "$DOTSPUSH" || -n "$DOTSPULL" ]]; then
@@ -203,8 +203,8 @@ if [[ -n "$RUN" ]]; then
 		cd "$original_dir"
 	fi
 
-	ln -sf "$PARRALEL_DIR/post_commit.bash" "$($git_cmd rev-parse --git-dir)/hooks/post-commit"
-	ln -sf "$PARRALEL_DIR/post_merge.bash" "$($git_cmd rev-parse --git-dir)/hooks/post-merge"
+	ln -sf "$HOOKS_DIR/post_commit.bash" "$DOTFILES_DIR/hooks/post-commit"
+	ln -sf "$HOOKS_DIR/post_merge.bash" "$DOTFILES_DIR/hooks/post-merge"
 
 else
 	frame_echo "Hooks are disabled."

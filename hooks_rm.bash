@@ -1,12 +1,10 @@
 #!/bin/bash
-original_dir=$(pwd)
 
 # Find the .git directory
-GIT_DIR=$(git rev-parse --show-toplevel)
+DOTFILES_DIR=$HOME/dotfiles
 
 
 # Create symlinks for hooks
-rm "$GIT_DIR/.git/hooks/post-commit"
-rm "$GIT_DIR/.git/hooks/post-merge"
+rm "$DOTFILES_DIR/.git/hooks/post-commit"
+rm "$DOTFILES_DIR/.git/hooks/post-merge"
 
-cd $original_dir

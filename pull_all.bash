@@ -2,6 +2,9 @@
 
 original_dir=$(pwd)
 
+DOTFILES_DIR=$HOME/dotfiles
+cd $DOTFILES_DIR
+
 set -e  # Exit on any command failure
 
 # Initialize SSH Agent
