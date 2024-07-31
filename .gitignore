@@ -1,0 +1,143 @@
+# -------------------------
+# General/System Files
+# -------------------------
+*.lock
+*.log
+*.bak
+*.db
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+Thumbs.db:encryptable
+$RECYCLE.BIN/
+*.lnk
+*.dir-locals.el
+
+# -------------------------
+# Development Tools & Editors
+# -------------------------
+# Vim/Neovim
+.*.sw[a-p]
+Session.vim
+.vim/undodir/*
+.vim/.netrwhist
+.local/share/nvim
+.nvim.shada
+.tmux/plugins/*
+.config/gh/*
+.nvim_chris
+.nvim_rayx
+firenvim
+/.repro/data/nvim/lazy/*
+/nvim_matchup_reprex/.repro/plugins/*
+/.repro/plugins/*
+.cfg
+.config/google-chrome/*
+.config/libreoffice/*
+.vim/pack/minpac/*
+.emacs.*/elpa/*
+.config/.repro
+.config/nvim/lazy-lock.json
+dotfiles
+.emacs.default/straight/build/undo-tree/.gitignore
+.cache/tags
+.xmonad-x86_64-linux
+.xmonad.errors
+.xmonad.state
+.xmonad.hi
+.xmonad.o
+.tmuxp
+.tmux/resurrect
+.zcompdump*
+.zsh_history
+.bash_history
+.gitconfig.local
+.gitconfig
+irssi/irssi/config.autosave
+ruby/bundle/cache
+
+# Emacs
+.emacs.d/network-security.data
+.emacs.d/.org-id-locations
+.emacs.d/ac-comphist.dat
+.emacs.d/auto-save-list/
+.emacs.d/smex-items
+.emacs.d/%backup%~
+.emacs.d/bookmarks
+.emacs.d/eln-cache
+.emacs.d/secret.el
+.emacs.d/transient
+.emacs.d/projects
+.emacs.d/session*
+.emacs.d/history
+.emacs.d/recentf
+.emacs.d/eshell
+.emacs.d/games
+.emacs.d/tramp
+.emacs.d/elpa
+.emacs.d/url
+.emacs.d/straight/build
+.emacs.d/straight/build-cache.el
+.emacs.d/straight/modified
+.emacs.d/straight/repos
+
+# -------------------------
+# Miscellaneous
+# -------------------------
+.aws/credentials
+*.ssh/id_rsa
+*.ssh/id_ecdsa
+*.ssh/id_ed25519
+*.gpg
+*.pem
+*.cer
+*.crt
+*.key
+*.iso
+*.tar.*
+*.backup
+.private/
+.secrets/
+.passwords/
+.idea/
+.vscode/
+__pycache__/
+node_modules/
+*cache*
+*.swp
+*.swo
+RCS
+.+,v
+CVS
+.\#+      # CVS conflict files / emacs lock files
+.cvsignore
+.svn
+_darcs
+.hg
+.+~       # emacs backup files
+\#.*\#    # emacs autosave files
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+.org-id-locations
+*_archive
+*_flymake.*
+/eshell/history
+/eshell/lastdir
+/elpa/
+*.rel
+/auto/
+.cask/
+dist/
+flycheck_*.el
+/server/
+.projectile
