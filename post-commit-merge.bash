@@ -198,8 +198,8 @@ if [[ -n "$RUN" ]]; then
 		cd "$original_dir"
 	fi
 
-	ln -sf "$HOOKS_DIR/post_commit.bash" "$DOTFILES_DIR/hooks/post-commit"
-	ln -sf "$HOOKS_DIR/post_merge.bash" "$DOTFILES_DIR/hooks/post-merge"
+	ln -sf "$HOOKS_DIR/post_commit.bash" "$DOTFILES_DIR/.git/hooks/post-commit"
+	ln -sf "$HOOKS_DIR/post_merge.bash" "$DOTFILES_DIR/.git/hooks/post-merge"
         chmod +x "$DOTFILES_DIR/hooks/post-commit"
         chmod +x "$DOTILES_DIR/hooks/post-merge"
 
