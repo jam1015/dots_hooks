@@ -1,19 +1,21 @@
 #!/bin/bash
 original_dir=$(pwd)
 
+# Initialize depth level
+depth=0
+
 frame_echo() {
 	local arg="$1"
 	local line="========================================================="
-	echo "$line"
-	echo "$arg"
-	echo "$line"
+	local indent=$(printf "%*s" $depth "")
+	echo "${indent}${line}"
+	echo "${indent}${arg}"
+	echo "${indent}${line}"
 }
-
 
 DOTFILES_DIR=$HOME/dotfiles
 HOOKS_DIR=$HOME/dots_hooks
 GIT_CMD="git -C $DOTFILES_DIR"
-
 
 [ -f "$DOTFILES_DIR/hooks/post-commit" ] && rm "$DOTFILES_DIR/hooks/post-commit"
 [ -f "$DOTFILES_DIR/hooks/post-merge" ] && rm "$DOTFILES_DIR/hooks/post-merge"
@@ -21,6 +23,7 @@ GIT_CMD="git -C $DOTFILES_DIR"
 set -e
 # Source configuration
 source "$HOOKS_DIR/config.bash"
+echo $DOTSREBASESTRATEGY
 
 if [[ -n "$RUN" ]]; then
 
@@ -72,7 +75,7 @@ if [[ -n "$RUN" ]]; then
 		fi
 
 		if [[ -n "$DOTSTRYREBASE" ]]; then
-      if ! $GIT_CMD rebase "$reapply_cherry_picks" "$rebase_strategy" "${source_branch}"; then
+			if ! $GIT_CMD rebase "$reapply_cherry_picks" "$rebase_strategy" "${source_branch}"; then
 				frame_echo "Rebase from ${source_branch} to ${target_branch} failed. Handle conflicts manually."
 				# Removed git rebase --abort to allow manual conflict resolution
 			else
@@ -111,7 +114,7 @@ if [[ -n "$RUN" ]]; then
 		frame_echo "Starting post commit/merge logic: Source: ${source_branch} | Target: ${target_branch}"
 
 		# Switch to the target branch only if it's not the current branch
-    if [[ "$($GIT_CMD rev-parse --abbrev-ref HEAD)" != "${target_branch}" ]]; then
+		if [[ "$($GIT_CMD rev-parse --abbrev-ref HEAD)" != "${target_branch}" ]]; then
 			frame_echo "Checking out target: ${target_branch}"
 			$GIT_CMD checkout "${target_branch}"
 		fi
@@ -141,7 +144,7 @@ if [[ -n "$RUN" ]]; then
 		fi
 
 		# Skip checkout if source and target branches are the same
-    if [[ "$($GIT_CMD rev-parse --abbrev-ref HEAD)" != "${target_branch}" ]]; then
+		if [[ "$($GIT_CMD rev-parse --abbrev-ref HEAD)" != "${target_branch}" ]]; then
 			frame_echo "Checking ${source_branch} back out."
 			$GIT_CMD checkout "${source_branch}"
 		fi
@@ -164,19 +167,23 @@ if [[ -n "$RUN" ]]; then
 		branch_map["mbp"]=""
 
 		# Start with the current branch
-    local current_branch=$($GIT_CMD rev-parse --abbrev-ref HEAD)
+		local current_branch=$($GIT_CMD rev-parse --abbrev-ref HEAD)
 		local original_branch=$current_branch
 		local branches_to_process=($current_branch)
 		local next_level_branches=()
 
 		while [ ${#branches_to_process[@]} -ne 0 ]; do
 			for branch in "${branches_to_process[@]}"; do
+				# Increase depth level
+				depth=$((depth + 1))
 				# Extract targets for the current branch
 				local targets=(${branch_map[$branch]})
 				for target in "${targets[@]}"; do
 					merge_to "$branch" "$target"
 					next_level_branches+=("$target")
 				done
+				# Decrease depth level
+				depth=$((depth - 1))
 			done
 			# Prepare the next level of branches
 			branches_to_process=("${next_level_branches[@]}")
@@ -200,8 +207,6 @@ if [[ -n "$RUN" ]]; then
 
 	ln -sf "$HOOKS_DIR/post_commit.bash" "$DOTFILES_DIR/.git/hooks/post-commit"
 	ln -sf "$HOOKS_DIR/post_merge.bash" "$DOTFILES_DIR/.git/hooks/post-merge"
-        chmod +x "$DOTFILES_DIR/.git/hooks/post-commit"
-        chmod +x "$DOTILES_DIR/.git/hooks/post-merge"
 
 else
 	frame_echo "Hooks are disabled."
