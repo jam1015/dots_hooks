@@ -58,14 +58,17 @@ if [[ -n "$RUN" ]]; then
 			reapply_cherry_picks=""
 		fi
 
-		# Determine rebase strategy from configuration
+		# Determine rebase strategy from configuration; note that this is counterintuitive
 		local rebase_strategy=""
+		local merge_strategy=""
 		case "$DOTSREBASESTRATEGY" in
 		"theirs")
-			rebase_strategy="-X theirs"
+			rebase_strategy="-X ours"
+			merge_strategy="-X theirs"
 			;;
 		"ours")
-			rebase_strategy="-X ours"
+			rebase_strategy="-X theirs"
+			merge_strategy="-X ours"
 			;;
 		esac
 
@@ -84,7 +87,7 @@ if [[ -n "$RUN" ]]; then
 			fi
 		else
 			frame_echo "DOTSTRYREBASE is not set. Proceeding with merge."
-			if ! $GIT_CMD merge "${source_branch}"; then
+			if ! $GIT_CMD merge "$merge_strategy" "${source_branch}"; then
 				frame_echo "Merge from ${source_branch} to ${target_branch} failed. Handle merge conflicts if any."
 			else
 				frame_echo "Merge successful."
@@ -157,8 +160,8 @@ if [[ -n "$RUN" ]]; then
 		# Declare an associative array to map branches to their respective targets
 		declare -A branch_map
 		branch_map["master"]="linux mac termux"
-		branch_map["linux"]="arch endeavour"
-		branch_map["arch"]="jmtp"
+		branch_map["linux"]="arch"
+		branch_map["arch"]="jmtp endeavour"
 		branch_map["endeavour"]="mbp fw"
 		branch_map["mac"]=""
 		branch_map["fw"]=""
