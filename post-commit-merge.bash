@@ -49,7 +49,7 @@ if [[ -n "$RUN" ]]; then
 	rebase_or_merge() {
 		local source_branch=$1
 		local target_branch=$2
-		local rebased=""
+		local rebased_or_merged=""
 
 		local reapply_cherry_picks=""
 		if [[ -n "$REAPPLYCHERRYPICKS" ]]; then
@@ -64,14 +64,20 @@ if [[ -n "$RUN" ]]; then
 		case "$DOTSREBASESTRATEGY" in
 		"theirs")
 			rebase_strategy="-X ours"
-			merge_strategy="-X theirs"
 			;;
 		"ours")
 			rebase_strategy="-X theirs"
-			merge_strategy="-X ours"
 			;;
 		esac
 
+		case "$DOTSMERGESTRATEGY" in
+		"theirs")
+			merge_strategy="-X theirs"
+			;;
+		"ours")
+			merge_strategy="-X ours"
+			;;
+		esac
 		if [[ "$source_branch" == "$target_branch" ]]; then
 			frame_echo "Source and target branches are the same: $source_branch. Skipping rebase/merge."
 			return 0
@@ -82,7 +88,7 @@ if [[ -n "$RUN" ]]; then
 				frame_echo "Rebase from ${source_branch} to ${target_branch} failed. Handle conflicts manually."
 				# Removed git rebase --abort to allow manual conflict resolution
 			else
-				rebased="true"
+				rebased_or_merged="true"
 				frame_echo "Rebase successful."
 			fi
 		else
@@ -90,11 +96,12 @@ if [[ -n "$RUN" ]]; then
 			if ! $GIT_CMD merge "$merge_strategy" "${source_branch}"; then
 				frame_echo "Merge from ${source_branch} to ${target_branch} failed. Handle merge conflicts if any."
 			else
+				rebased_or_merged="true"
 				frame_echo "Merge successful."
 			fi
 		fi
 
-		if [[ -n "$rebased" && -n "$DOTSPULL" ]]; then
+		if [[ -n "$rebased_or_merged" && -n "$DOTSPULL" ]]; then
 			if ! $GIT_CMD pull origin "${target_branch}"; then
 				frame_echo "Pull from origin ${target_branch} failed. Resolve any issues and retry."
 			else
