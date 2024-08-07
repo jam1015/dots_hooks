@@ -83,6 +83,7 @@ if [[ -n "$RUN" ]]; then
 			rebase_strategy="-X theirs"
 			;;
 		esac
+    frame_echo "rebase strategy: $rebase_strategy"
 
 		case "$DOTSMERGESTRATEGY" in
 		"theirs")
@@ -92,6 +93,7 @@ if [[ -n "$RUN" ]]; then
 			merge_strategy="-X ours"
 			;;
 		esac
+    frame_echo "merge strategy: $merge_strategy"
 		if [[ "$source_branch" == "$target_branch" ]]; then
 			frame_echo "Source and target branches are the same: $source_branch. Skipping rebase/merge."
 			return 0
