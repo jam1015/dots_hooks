@@ -166,7 +166,9 @@ if [[ -n "$RUN" ]]; then
 	merge_switch() {
 		# Declare an associative array to map branches to their respective targets
 		declare -A branch_map
-		branch_map["master"]="linux mac termux"
+		branch_map["master"]="computer phone"
+		branch_map["computer"]="linux mac"
+		branch_map["phone"]="termux"
 		branch_map["linux"]="arch"
 		branch_map["arch"]="jmtp endeavour"
 		branch_map["endeavour"]="mbp fw"
