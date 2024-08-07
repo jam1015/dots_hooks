@@ -1,6 +1,20 @@
 #!/bin/bash
 original_dir=$(pwd)
 
+# Declare an associative array to map branches to their respective targets
+declare -A branch_map
+branch_map["master"]="computer phone"
+branch_map["computer"]="linux mac"
+branch_map["phone"]="termux"
+branch_map["linux"]="arch"
+branch_map["arch"]="jmtp endeavour"
+branch_map["endeavour"]="mbp fw"
+branch_map["mac"]=""
+branch_map["fw"]=""
+branch_map["termux"]=""
+branch_map["jmtp"]=""
+branch_map["mbp"]=""
+
 # Initialize depth level
 depth=0
 
@@ -34,7 +48,7 @@ if [[ -n "$RUN" ]]; then
 	if [[ -n "$DOTSPUSH" || -n "$DOTSPULL" ]]; then
 		eval "$(ssh-agent -s)"
 		ssh-add -t 3600 ~/.ssh/id_ed25519
-                trap "kill $SSH_AGENT_PID" EXIT
+		trap "kill $SSH_AGENT_PID" EXIT
 	fi
 
 	# Function to check if a branch exists locally
@@ -164,19 +178,6 @@ if [[ -n "$RUN" ]]; then
 
 	# This function now just prepares the queue and processes it
 	merge_switch() {
-		# Declare an associative array to map branches to their respective targets
-		declare -A branch_map
-		branch_map["master"]="computer phone"
-		branch_map["computer"]="linux mac"
-		branch_map["phone"]="termux"
-		branch_map["linux"]="arch"
-		branch_map["arch"]="jmtp endeavour"
-		branch_map["endeavour"]="mbp fw"
-		branch_map["mac"]=""
-		branch_map["fw"]=""
-		branch_map["termux"]=""
-		branch_map["jmtp"]=""
-		branch_map["mbp"]=""
 
 		# Start with the current branch
 		local current_branch=$($GIT_CMD rev-parse --abbrev-ref HEAD)
