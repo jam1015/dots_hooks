@@ -37,7 +37,6 @@ GIT_CMD="git -C $DOTFILES_DIR"
 set -e
 # Source configuration
 source "$HOOKS_DIR/config.bash"
-echo $DOTSREBASESTRATEGY
 
 if [[ -n "$RUN" ]]; then
 
@@ -100,7 +99,9 @@ if [[ -n "$RUN" ]]; then
 		fi
 
 		if [[ -n "$DOTSTRYREBASE" ]]; then
-			if ! $GIT_CMD rebase "$reapply_cherry_picks" "$rebase_strategy" "${source_branch}"; then
+      rebase_cmd=$(echo "$GIT_CMD rebase "$reapply_cherry_picks" "$rebase_strategy" "${source_branch}"" | tr -s " ")
+      frame_echo "trying $rebase_cmd"
+			if ! eval $rebase_cmd; then
 				frame_echo "Rebase from ${source_branch} to ${target_branch} failed. Handle conflicts manually."
 				# Removed git rebase --abort to allow manual conflict resolution
 			else
@@ -109,7 +110,9 @@ if [[ -n "$RUN" ]]; then
 			fi
 		else
 			frame_echo "DOTSTRYREBASE is not set. Proceeding with merge."
-			if ! $GIT_CMD merge "$merge_strategy" "${source_branch}"; then
+      merge_cmd=$(echo "$GIT_CMD merge $merge_strategy ${source_branch}" | tr -s " ")
+      frame_echo "trying $merge_cmd"
+			if ! eval $merge_cmd; then
 				frame_echo "Merge from ${source_branch} to ${target_branch} failed. Handle merge conflicts if any."
 			else
 				rebased_or_merged="true"
@@ -132,12 +135,12 @@ if [[ -n "$RUN" ]]; then
 		local source_branch=$1
 		local target_branch=$2
 
+		frame_echo "Starting post commit/merge logic: Source: ${source_branch} | Target: ${target_branch}"
 		if ! branch_exists "${target_branch}"; then
 			frame_echo "Branch ${target_branch} does not exist on this system."
-			return 1
+			return 0
 		fi
 
-		frame_echo "Starting post commit/merge logic: Source: ${source_branch} | Target: ${target_branch}"
 
 		# Switch to the target branch only if it's not the current branch
 		if [[ "$($GIT_CMD rev-parse --abbrev-ref HEAD)" != "${target_branch}" ]]; then
@@ -193,8 +196,11 @@ if [[ -n "$RUN" ]]; then
 				depth=$((depth + 1))
 				# Extract targets for the current branch
 				local targets=(${branch_map[$branch]})
+        echo "${targets[@]}"
 				for target in "${targets[@]}"; do
+          if [[ ! (-z "$target" || -z "$branch") ]] ; then
 					merge_to "$branch" "$target"
+          fi
 					next_level_branches+=("$target")
 				done
 				# Decrease depth level
