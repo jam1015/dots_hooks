@@ -173,7 +173,7 @@ if [[ -n "$RUN" ]]; then
 		fi
 
 		# Skip checkout if source and target branches are the same
-		if [[ "$($GIT_CMD rev-parse --abbrev-ref HEAD)" != "${target_branch}" ]]; then
+		if [[ "$($GIT_CMD rev-parse --abbrev-ref HEAD)" != "${source_branch}" ]]; then
 			frame_echo "Checking ${source_branch} back out."
 			$GIT_CMD checkout "${source_branch}"
 		fi
