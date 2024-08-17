@@ -199,9 +199,11 @@ if [[ -n "$RUN" ]]; then
     local current_branch=$($GIT_CMD rev-parse --abbrev-ref HEAD)
     local original_branch=$current_branch
     if [[ -n "$BREADTHFIRST" ]]; then
+      depth=$((depth + 1))
       for target in ${branch_map[$original_branch]}; do
         merge_to "$original_branch" "$target"
       done
+      depth=$((depth + 1))
     else
       # Start with the current branch
       local branches_to_process=($current_branch)
