@@ -190,7 +190,7 @@ if [[ -n "$RUN" ]]; then
       $GIT_CMD checkout "${source_branch}"
     fi
 
-      frame_echo "Completed post commit/merge logic: Source: ${source_branch} | Target: ${target_branch}"
+    frame_echo "Completed post commit/merge logic: Source: ${source_branch} | Target: ${target_branch}"
   }
 
   # This function now just prepares the queue and processes it
@@ -203,7 +203,7 @@ if [[ -n "$RUN" ]]; then
       for target in ${branch_map[$original_branch]}; do
         merge_to "$original_branch" "$target"
       done
-      depth=$((depth + 1))
+      depth=$((depth - 1))
     else
       # Start with the current branch
       local branches_to_process=($current_branch)
