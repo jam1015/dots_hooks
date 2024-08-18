@@ -232,7 +232,6 @@ if [[ -n "$RUN" ]]; then
         next_level_branches=()
       done
     fi
-    $GIT_CMD checkout "$original_branch"
   }
   merge_switch
   export DISPLAY=$original_display
