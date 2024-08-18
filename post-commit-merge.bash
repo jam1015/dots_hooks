@@ -180,17 +180,17 @@ if [[ -n "$RUN" ]]; then
       frame_echo "DOTSPUSH is not set. Skipping push."
     fi
 
+    if [[ -z "$BREADTHFIRST" ]]; then
+      merge_switch
+    fi
+
     # Skip checkout if source and target branches are the same
     if [[ "$($GIT_CMD rev-parse --abbrev-ref HEAD)" != "${source}" ]]; then
       frame_echo "Checking ${source_branch} back out."
       $GIT_CMD checkout "${source_branch}"
     fi
 
-    if [[ -n "$BREADTHFIRST" ]]; then
-      merge_switch
-    else
       frame_echo "Completed post commit/merge logic: Source: ${source_branch} | Target: ${target_branch}"
-    fi
   }
 
   # This function now just prepares the queue and processes it
@@ -198,7 +198,7 @@ if [[ -n "$RUN" ]]; then
 
     local current_branch=$($GIT_CMD rev-parse --abbrev-ref HEAD)
     local original_branch=$current_branch
-    if [[ -n "$BREADTHFIRST" ]]; then
+    if [[ -z "$BREADTHFIRST" ]]; then
       depth=$((depth + 1))
       for target in ${branch_map[$original_branch]}; do
         merge_to "$original_branch" "$target"
