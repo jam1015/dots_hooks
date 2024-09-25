@@ -107,7 +107,7 @@ if [[ -n "$RUN" ]]; then
       return 0
     fi
 
-    if [[ -n "$DOTSTRYREBASE" ]]; then
+    if [[ -n "$DOTSREBASE" ]]; then
       rebase_cmd=$(echo "$GIT_CMD rebase "$reapply_cherry_picks" "$rebase_strategy" "${source_branch}"" | tr -s " ")
       frame_echo "trying $rebase_cmd"
       if ! eval $rebase_cmd; then
@@ -118,7 +118,7 @@ if [[ -n "$RUN" ]]; then
         frame_echo "Rebase successful."
       fi
     else
-      frame_echo "DOTSTRYREBASE is not set. Proceeding with merge."
+      frame_echo "DOTSREBASE is not set. Proceeding with merge."
       merge_cmd=$(echo "$GIT_CMD merge $merge_strategy ${source_branch}" | tr -s " ")
       frame_echo "trying $merge_cmd"
       if ! eval $merge_cmd; then
