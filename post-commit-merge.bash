@@ -69,6 +69,7 @@ if [[ -n "$RUN" ]]; then
   }
 
   rebase_or_merge() {
+    set +e
     local source_branch=$1
     local target_branch=$2
     local rebased_or_merged=""
@@ -108,7 +109,7 @@ if [[ -n "$RUN" ]]; then
     fi
 
     if [[ -n "$DOTSREBASE" ]]; then
-      rebase_cmd=$(echo "$GIT_CMD rebase "$reapply_cherry_picks" "$rebase_strategy" "${source_branch}"" | tr -s " ")
+      rebase_cmd=$(echo "$GIT_CMD rebase --strategy=ort "$reapply_cherry_picks" "$rebase_strategy" "${source_branch}"" | tr -s " ")
       frame_echo "trying $rebase_cmd"
       if ! eval $rebase_cmd; then
         frame_echo "Rebase from ${source_branch} to ${target_branch} failed. Handle conflicts manually."
@@ -137,6 +138,7 @@ if [[ -n "$RUN" ]]; then
       fi
     fi
 
+    set -e
     return 0
   }
 
