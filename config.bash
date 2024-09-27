@@ -12,4 +12,4 @@ export DOTSPUSH=""   # variable to control push actions
 export REAPPLYCHERRYPICKS=""
 export RUN="true"
 export STOW=""
-export BREADTHFIRST=""
+export BREADTHFIRST="true"

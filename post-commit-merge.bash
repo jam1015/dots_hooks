@@ -1,4 +1,5 @@
 #!/bin/bash
+set +e
 original_dir=$(pwd)
 
 # Declare an associative array to map branches to their respective targets
@@ -34,7 +35,6 @@ GIT_CMD="git -C $DOTFILES_DIR"
 [ -f "$DOTFILES_DIR/hooks/post-commit" ] && rm "$DOTFILES_DIR/hooks/post-commit"
 [ -f "$DOTFILES_DIR/hooks/post-merge" ] && rm "$DOTFILES_DIR/hooks/post-merge"
 
-set -e
 # Source configuration
 source "$HOOKS_DIR/config.bash"
 
@@ -69,7 +69,6 @@ if [[ -n "$RUN" ]]; then
   }
 
   rebase_or_merge() {
-    set +e
     local source_branch=$1
     local target_branch=$2
     local rebased_or_merged=""
@@ -138,7 +137,6 @@ if [[ -n "$RUN" ]]; then
       fi
     fi
 
-    set -e
     return 0
   }
 
