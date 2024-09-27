@@ -233,6 +233,7 @@ if [[ -n "$RUN" ]]; then
 				branches_to_process=("${next_level_branches[@]}")
 				next_level_branches=()
 			done
+      frame_echo "Checking original branch, ${original_branch}, back out.
       $GIT_CMD checkout "${original_branch}"
 		fi
 	}
