@@ -1,12 +1,15 @@
 #!/bin/bash
 
+# Save the original directory
 original_dir=$(pwd)
 
+# Set the dotfiles directory
 DOTFILES_DIR=$HOME/dotfiles
 cd $DOTFILES_DIR
 GIT_CMD="git -C $DOTFILES_DIR"
 
-set -e  # Exit on any command failure
+# Exit immediately if a command exits with a non-zero status
+set -e
 
 # Initialize SSH Agent
 eval "$(ssh-agent -s)"  # Start the SSH agent
@@ -16,8 +19,8 @@ trap "kill $SSH_AGENT_PID" EXIT
 # Save the current branch name
 current_branch=$($GIT_CMD rev-parse --abbrev-ref HEAD)
 
-# Function to pull from origin
-pull_branch() {
+# Function to pull from origin and rebase
+pull_and_rebase_branch() {
   local remote_branch="$1"
   local branch="${remote_branch#origin/}"  # Remove 'origin/' from the branch name
 
@@ -30,6 +33,8 @@ pull_branch() {
   fi
   if $GIT_CMD pull origin "$branch"; then
     echo "Updates pulled successfully for branch: $branch"
+    $GIT_CMD rebase
+    echo "Rebased $branch"
   else
     echo "Conflict detected in branch: $branch. Please resolve manually."
     return 1  # Return an error code to indicate a conflict
@@ -39,7 +44,7 @@ pull_branch() {
 # Fetch all remote branches and iterate over them
 $GIT_CMD fetch --all
 $GIT_CMD branch -r | grep -v '\->' | while read -r remote_branch; do
-  if ! pull_branch "$remote_branch"; then
+  if ! pull_and_rebase_branch "$remote_branch"; then
     echo "Stopping the script due to a conflict."
     exit 1  # Exit the script entirely if a conflict occurs
   fi
@@ -52,4 +57,5 @@ echo "Returned to the original branch: $current_branch"
 # Kill the SSH agent
 eval "$(ssh-agent -k)"
 
+# Return to the original directory
 cd $original_dir
