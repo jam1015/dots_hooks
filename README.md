@@ -1,1 +1,1 @@
-# hooks for my dotfiles
+# these scripts are used as hooks in my dotfiles repo
