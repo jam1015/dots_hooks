@@ -1,61 +1,78 @@
 #!/bin/bash
 
-# Save the original directory
-original_dir=$(pwd)
-
-# Set the dotfiles directory
-DOTFILES_DIR=$HOME/dotfiles
-cd $DOTFILES_DIR
-GIT_CMD="git -C $DOTFILES_DIR"
-
 # Exit immediately if a command exits with a non-zero status
 set -e
+set -o pipefail  # Exit if any command in a pipeline fails
 
-# Initialize SSH Agent
-eval "$(ssh-agent -s)"  # Start the SSH agent
-ssh-add ~/.ssh/id_ed25519  # Add your SSH key; replace id_ed25519 with your key file
-trap "kill $SSH_AGENT_PID" EXIT
-
-# Save the current branch name
+# Save the original directory and branch
+original_dir=$(pwd)
+cd "$HOME/dotfiles"
+GIT_CMD="git -C $HOME/dotfiles"
 current_branch=$($GIT_CMD rev-parse --abbrev-ref HEAD)
 
-# Function to pull from origin and rebase
+# Function to clean up before exit
+cleanup() {
+  echo "Cleaning up..."
+  # Return to the original branch if it exists
+  if $GIT_CMD rev-parse --verify --quiet "$current_branch" >/dev/null; then
+    $GIT_CMD checkout "$current_branch"
+    echo "Returned to the original branch: $current_branch"
+  fi
+  # Kill the SSH agent if it was started by this script
+  if [[ -n "$SSH_AGENT_PID" ]]; then
+    kill "$SSH_AGENT_PID" >/dev/null 2>&1 || true
+  fi
+  cd "$original_dir"
+}
+trap cleanup EXIT
+
+# Initialize SSH Agent if not running
+if ! pgrep -u "$USER" ssh-agent >/dev/null; then
+  eval "$(ssh-agent -s)"
+  # Add SSH key; check if the key exists
+  SSH_KEY="$HOME/.ssh/id_ed25519"
+  if [[ -f "$SSH_KEY" ]]; then
+    ssh-add "$SSH_KEY"
+  else
+    echo "SSH key $SSH_KEY not found."
+    exit 1
+  fi
+else
+  echo "SSH agent is already running."
+fi
+
+# Function to pull and rebase a branch
 pull_and_rebase_branch() {
   local remote_branch="$1"
-  local branch="${remote_branch#origin/}"  # Remove 'origin/' from the branch name
+  local branch="${remote_branch#origin/}"
 
-  echo "Pulling updates for branch: $branch"
+  echo "Updating branch: $branch"
+
   # Check if the branch is already local
-  if $GIT_CMD rev-parse --verify --quiet "$branch"; then
+  if $GIT_CMD rev-parse --verify --quiet "$branch" >/dev/null; then
     $GIT_CMD checkout "$branch"
   else
     $GIT_CMD checkout -b "$branch" "$remote_branch"
   fi
-  if $GIT_CMD pull origin "$branch"; then
-    echo "Updates pulled successfully for branch: $branch"
-    $GIT_CMD rebase
-    echo "Rebased $branch"
-  else
+
+  # Pull and rebase; handle conflicts
+  if ! $GIT_CMD pull --rebase origin "$branch"; then
     echo "Conflict detected in branch: $branch. Please resolve manually."
-    return 1  # Return an error code to indicate a conflict
+    # Return to the original branch before exiting
+    exit 1
+  else
+    echo "Successfully rebased branch: $branch"
   fi
 }
 
-# Fetch all remote branches and iterate over them
+# Fetch all remote branches
+echo "Fetching all remote branches..."
 $GIT_CMD fetch --all
-$GIT_CMD branch -r | grep -v '\->' | while read -r remote_branch; do
-  if ! pull_and_rebase_branch "$remote_branch"; then
-    echo "Stopping the script due to a conflict."
-    exit 1  # Exit the script entirely if a conflict occurs
-  fi
+
+# Get list of remote branches excluding HEAD
+remote_branches=$($GIT_CMD for-each-ref --format='%(refname:strip=3)' refs/remotes/origin | grep -v '^HEAD$')
+
+# Iterate over remote branches
+for remote_branch in $remote_branches; do
+  pull_and_rebase_branch "origin/$remote_branch"
 done
-
-# Checkout the original branch
-$GIT_CMD checkout "$current_branch"
-echo "Returned to the original branch: $current_branch"
-
-# Kill the SSH agent
-eval "$(ssh-agent -k)"
-
-# Return to the original directory
-cd $original_dir
