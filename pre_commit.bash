@@ -5,7 +5,7 @@ DOTFILES_DIR=$HOME/dotfiles
 
 if command -v pacman >/dev/null 2>&1; then
     # pacman exists: Dump the current package list into the arch-packages file
-    pacman -Qqte > "$DOTFILES_DIR/arch-packages"
+    pacman -Qq > "$DOTFILES_DIR/arch-packages"
     # Add the updated file to the commit
     git add "$DOTFILES_DIR/arch-packages"
 else
