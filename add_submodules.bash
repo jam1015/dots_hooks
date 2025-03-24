@@ -1,4 +1,7 @@
 #/bin/bash
+
+cd ~/dotfiles
+
 # Initialize the .config/emacs submodule
 git submodule add git@github.com:plexus/chemacs2 .config/emacs
 
@@ -12,4 +15,4 @@ git submodule add -b develop git@github.com:syl20bnr/spacemacs .spacemacs
 git submodule add git@github.com:doomemacs/doomemacs .doomemacs
 
 # Initialize minpac submodule
-git submodule add .vim/pack/minpac/opt/minpac
+git submodule add git@github.com:k-takata/minpac  .vim/pack/minpac/opt/minpac
