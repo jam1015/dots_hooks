@@ -10,35 +10,55 @@ cd "$HOME/dotfiles"
 GIT_CMD="git -C $HOME/dotfiles"
 current_branch=$($GIT_CMD rev-parse --abbrev-ref HEAD)
 
+# Define variables for hooks directories
+HOOKS_DIR="$HOME/dotfiles/.git/hooks"
+DISABLED_HOOKS_DIR="$HOME/dotfiles/.git/hooks_disabled"
+
 # Function to clean up before exit
 cleanup() {
   echo "Cleaning up..."
+  
+  # Re-enable Git hooks by restoring the hooks directory if it was disabled
+  if [ -d "$DISABLED_HOOKS_DIR" ]; then
+    mv "$DISABLED_HOOKS_DIR" "$HOOKS_DIR"
+    echo "Hooks re-enabled."
+  fi
+  
   # Return to the original branch if it exists
   if $GIT_CMD rev-parse --verify --quiet "$current_branch" >/dev/null; then
     $GIT_CMD checkout "$current_branch"
     echo "Returned to the original branch: $current_branch"
   fi
-  # Kill the SSH agent if it was started by this script
+  
+  # Kill the SSH agent that was started by this script
   if [[ -n "$SSH_AGENT_PID" ]]; then
     kill "$SSH_AGENT_PID" >/dev/null 2>&1 || true
+    echo "SSH agent killed."
   fi
+  
   cd "$original_dir"
 }
 trap cleanup EXIT
 
-# Initialize SSH Agent if not running
-if ! pgrep -u "$USER" ssh-agent >/dev/null; then
-  eval "$(ssh-agent -s)"
-  # Add SSH key; check if the key exists
-  SSH_KEY="$HOME/.ssh/id_ed25519"
-  if [[ -f "$SSH_KEY" ]]; then
-    ssh-add "$SSH_KEY"
-  else
-    echo "SSH key $SSH_KEY not found."
-    exit 1
-  fi
+# Always start a new SSH Agent
+echo "Starting new SSH agent..."
+eval "$(ssh-agent -s)"
+
+# Add SSH key; check if the key exists
+SSH_KEY="$HOME/.ssh/id_ed25519"
+if [[ -f "$SSH_KEY" ]]; then
+  ssh-add "$SSH_KEY"
 else
-  echo "SSH agent is already running."
+  echo "SSH key $SSH_KEY not found."
+  exit 1
+fi
+
+# Disable hooks temporarily by renaming the hooks directory
+if [ -d "$HOOKS_DIR" ]; then
+  mv "$HOOKS_DIR" "$DISABLED_HOOKS_DIR"
+  echo "Hooks disabled."
+else
+  echo "No hooks directory found to disable."
 fi
 
 # Function to pull and rebase a branch
@@ -58,7 +78,6 @@ pull_and_rebase_branch() {
   # Pull and rebase; handle conflicts
   if ! $GIT_CMD pull --rebase origin "$branch"; then
     echo "Conflict detected in branch: $branch. Please resolve manually."
-    # Return to the original branch before exiting
     exit 1
   else
     echo "Successfully rebased branch: $branch"
