@@ -16,3 +16,8 @@ git submodule add git@github.com:doomemacs/doomemacs .doomemacs
 
 # Initialize minpac submodule
 git submodule add git@github.com:k-takata/minpac  .vim/pack/minpac/opt/minpac
+
+# CMU Typewriter Dotted: monospace font with a dot inside the zero, so
+# `0` is distinguishable from `O`. Fonts land in a fontconfig-scanned
+# directory so they're picked up on first cache rebuild.
+git submodule add https://github.com/jam1015/cmu-typewriter-dotted .local/share/fonts/cmu-typewriter-dotted
